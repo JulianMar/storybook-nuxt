@@ -127,15 +127,22 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (
   config: Record<string, any>,
   options: any,
 ) => {
-  const getStorybookViteConfig = async (c: Record<string, any>, o: any) => {
-    // const pkgPath = await getPackageDir('@storybook/vue3-vite')
-    const presetURL = pathToFileURL(join(await getPackageDir('@storybook/vue3-vite'), 'preset.js'))
-    const { viteFinal: ViteFile } = await import(presetURL.href)
-
-    if (!ViteFile)
-      throw new Error('ViteFile not found')
-    return ViteFile(c, o)
-  }
+  const getStorybookViteConfig: StorybookConfig['viteFinal'] = async (config, { presets }) => {
+    const plugins: PluginOption[] = [];
+  
+    // Add docgen plugin
+    plugins.push(vueDocgen());
+  
+    return mergeConfig(config, {
+      plugins,
+      resolve: {
+        alias: {
+          vue: 'vue/dist/vue.esm-bundler.js',
+        },
+      },
+    });
+  };
+  
   const nuxtConfig = await defineNuxtConfig(await getStorybookViteConfig(config, options))
 
   return mergeConfig(nuxtConfig.viteConfig, {
